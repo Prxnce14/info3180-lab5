@@ -1,6 +1,7 @@
 <template>
       <footer class="mt-5">
-          <div class="container">
+        <hr>
+          <div class="foot">
               <p>Copyright &copy {{ year }} Flask Inc.</p>
           </div>
       </footer>
@@ -14,4 +15,9 @@ const year = (new Date).getFullYear();
 
 <style>
 /* Add any component specific styles here */
+
+.foot
+{
+    text-align: center;
+}
 </style>

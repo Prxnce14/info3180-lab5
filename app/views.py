@@ -6,11 +6,12 @@ This file creates your application.
 """
 
 from app import app, db
-from flask import render_template, request, jsonify, send_file, flash
+from flask import render_template, request, jsonify, send_file, flash, send_from_directory
 import os
 from app.models import movietemp
 from app.forms import MovieForm
 from werkzeug.utils import secure_filename
+from flask_wtf.csrf import generate_csrf
 
 ###
 # Routing for your application.
@@ -25,40 +26,64 @@ def index():
 @app.route('/api/v1/movies', methods=['POST'])
 def movies():
     
-
     form = MovieForm()
+    try:
+        if form.validate_on_submit():
+            title = form.title.data
+            descript = form.description
+            img = form.poster.data
+            filename = secure_filename(img.filename)
 
-    if request.method == 'POST':
-        try:
-            if form.validate_on_submit():
-                title = form.title.data
-                descript = form.description
-                img = form.poster.data
-                filename = secure_filename(img.filename)
+            
+            new_movie =  movietemp(title, descript, filename)
+            db.session.add(new_movie)
+            db.session.commit()
 
-                img.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            img.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
-                
-                new_movie =  movietemp(title, descript, filename)
-                db.session.add(new_movie)
-                db.session.commit()
+            flash('Movie Added', 'success')
+            data = {
+            "message": "Movie Successfully added",
+            "title": title,
+            "poster": filename,
+            "description": descript
+            }
+            
+            return jsonify(data)
+        else:
+            errors = form_errors(form)
+            return jsonify({'errors': errors})
+            
+    except Exception as e:
+        # Handle any exceptions here
+        flash({'An error occurred' : str(e)}, 400)
 
-                flash('Movie Added', 'success')
-                return jsonify({
-                "message": "Movie Successfully added",
-                "title": title,
-                "poster": filename,
-                "description": descript }), 200
-            else:
-                return jsonify({"errors": form_errors(form)}), 400
-                
-            # else:
-            #     form_errors(form)
-              
-        except Exception as e:
-            # Handle any exceptions here
-            flash({'An error occurred' : str(e)}, 400)
 
+@app.route('/api/v1/movies', methods=['GET'])
+def getMovies():
+    movies =movietemp.query.all()
+    movieLst = []
+
+    for movie in movies:
+        movieLst.append(
+            {
+                "id": movie.id,
+                "title": movie.title,
+                "description": movie.description,
+                "poster": "/api/v1/posters/{}".format(movie.poster)
+            }
+        )
+    data = {"movies": movieLst}
+
+    return jsonify(data)
+    
+@app.route('/api/v1/posters/<filename>')
+def getPoster(filename):
+    return send_from_directory(os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER']), filename)
+
+@app.route('/api/v1/csrf-token', methods=['GET'])
+def get_csrf():
+ return jsonify({'csrf_token': generate_csrf()})
 
 
 ###
