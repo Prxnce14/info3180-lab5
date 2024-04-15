@@ -55,20 +55,8 @@
 
     function saveMovie(){
 
-        let movieForm = document.querySelector("#movieform")
+        let movieForm = document.querySelector("#movieform");
         let form_data = new FormData(movieForm);
-        // let movieForm = document.getElementById("movieform");
-        // let form_data
-        // if (movieForm !== null && movieForm instanceof HTMLFormElement)
-        // { 
-        //     // Now you're sure that movieForm is not null and it's an HTMLFormElement
-        //     form_data = new FormData(movieForm);
-        // }
-        // else 
-        //     // Handle the case where movieForm is null or not an HTMLFormElement
-        //     console.error("Form element not found or not of type HTMLFormElement");
-        
-
 
         fetch("/api/v1/movies", {
                 method: 'POST',
@@ -82,17 +70,18 @@
         }) 
         .then(function (data) {
             console.log(data);
-            fetchResponse.value = data
+            // fetchResponse.value = data;
             
-            if(data.hasOwnProperty('errors')) {
-                fetchResponseType.value = "danger"
-            } else {
-                fetchResponseType.value = "success"
-            }
+            // if(data.hasOwnProperty('errors')) {
+            //     fetchResponseType.value = "danger";
+            // } else {
+            //     fetchResponseType.value = "success";
+            // }
+            message.value = data;
         })
         .catch(function (error) {
             console.log(error);
-        });
+        })
 
     } 
         

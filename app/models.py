@@ -17,11 +17,12 @@ class movietemp(db.Model):
 
 
 
-def __init__(self, title, desc, post, time):
-        self.title= title
-        self.description = desc
-        self.poster = post
-        self.created_at = time
+    def __init__(self, title, desc, post, time):
+          self.title = title
+          self.description = desc
+          self.poster = post
+          self.created_at = time
+          
 
 
 def __repr__(self):

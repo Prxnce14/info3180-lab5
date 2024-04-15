@@ -5,13 +5,14 @@ Werkzeug Documentation:  https://werkzeug.palletsprojects.com/
 This file creates your application.
 """
 
-from app import app, db
+from app import app, db;
 from flask import render_template, request, jsonify, send_file, flash, send_from_directory
 import os
 from app.models import movietemp
 from app.forms import MovieForm
 from werkzeug.utils import secure_filename
 from flask_wtf.csrf import generate_csrf
+import datetime
 
 ###
 # Routing for your application.
@@ -27,55 +28,56 @@ def index():
 def movies():
     
     form = MovieForm()
-    try:
-        if form.validate_on_submit():
-            title = form.title.data
-            descript = form.description
-            img = form.poster.data
-            filename = secure_filename(img.filename)
+    if request.method == 'POST' :
+        try:
+            if form.validate_on_submit():
+                    title = form.title.data
+                    descript = form.description.data
+                    created_at = datetime.datetime.now()
+                    img = form.poster.data
+                    filename = secure_filename(img.filename)
 
-            
-            new_movie =  movietemp(title, descript, filename)
-            db.session.add(new_movie)
-            db.session.commit()
-
-            img.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-
-            flash('Movie Added', 'success')
-            data = {
-            "message": "Movie Successfully added",
-            "title": title,
-            "poster": filename,
-            "description": descript
-            }
-            
-            return jsonify(data)
-        else:
-            errors = form_errors(form)
-            return jsonify({'errors': errors})
-            
-    except Exception as e:
-        # Handle any exceptions here
-        flash({'An error occurred' : str(e)}, 400)
+                    img.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    
+                    new_movie =  movietemp(title, descript, filename, created_at)
+                    db.session.add(new_movie)
+                    db.session.commit()
+                    
+                    flash('Movie Added', 'success')
+                    
+                    return jsonify({
+                        "message": "Movie Successfully added",
+                        "title": title,
+                        "poster": filename, 
+                        "description": descript
+                        })
+            else:
+                    errors = form_errors(form)
+                    return jsonify({'errors': errors})           
+        except Exception as e:
+            # Handle any exceptions here
+            flash({'An error occurred' : str(e)}, 400)
 
 
 @app.route('/api/v1/movies', methods=['GET'])
 def getMovies():
-    movies =movietemp.query.all()
-    movieLst = []
+    if request.method == 'GET' :
 
-    for movie in movies:
-        movieLst.append(
-            {
-                "id": movie.id,
-                "title": movie.title,
-                "description": movie.description,
-                "poster": "/api/v1/posters/{}".format(movie.poster)
-            }
-        )
-    data = {"movies": movieLst}
+        movies =movietemp.query.all()
+        movieLst = []
 
-    return jsonify(data)
+        for movie in movies:
+            movieLst.append(
+                {
+                    "id": movie.id,
+                    "title": movie.title,
+                    "description": movie.description,
+                    "poster": "/api/v1/posters/{}".format(movie.poster)
+                }
+            )
+        data = {"movies": movieLst}
+
+        return jsonify(data)
     
 @app.route('/api/v1/posters/<filename>')
 def getPoster(filename):

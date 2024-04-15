@@ -4,7 +4,9 @@
     let movies = ref([]);
 
     function fetchMovies(){
-        fetch("/api/v1/movies")
+        fetch("/api/v1/movies", {
+        method: 'GET',
+        }) 
         .then(response => {
             if(response.ok){
                 return response.json()
